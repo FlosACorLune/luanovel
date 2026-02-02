@@ -47,42 +47,6 @@
     background-color: var(--hover-color);
 }
 
-.back-dropdown {
-    position: absolute;
-    top: 50px;
-    left: 0;
-    background-color: var(--bg-secondary);
-    border: 1px solid #444;
-    border-radius: 8px;
-    min-width: 150px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.back-dropdown.show {
-    display: flex;
-}
-
-.dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    color: var(--text-color);
-    text-decoration: none;
-    transition: background 0.2s;
-}
-
-.dropdown-item:hover {
-    background-color: var(--hover-color);
-}
-
-.dropdown-item span {
-    font-size: 18px;
-}
-
 /* Навигация по главам */
 .chapter-nav {
     display: flex;

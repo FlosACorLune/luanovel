@@ -11,7 +11,7 @@
         
         <!-- Кнопки действий -->
         <button class="action-button primary" onclick="startReading()">
-            Start Read (1st ch)
+            Start Read
         </button>
         
         <button class="action-button secondary" onclick="toggleBookmark()">
@@ -34,7 +34,6 @@
             <div class="chapters-header">
                 <span class="chapters-label">Chapters</span>
                 <input type="text" placeholder="Find num" class="chapter-search">
-                <button class="sort-button">ASC/DESC</button>
             </div>
             
             <!-- Список глав -->
@@ -76,24 +75,6 @@ document.querySelector('.chapter-search').addEventListener('input', function(e) 
         const text = item.textContent.toLowerCase();
         item.style.display = text.includes(query) ? 'flex' : 'none';
     });
-});
-
-// Сортировка глав
-let isAscending = false;
-document.querySelector('.sort-button').addEventListener('click', function() {
-    const list = document.querySelector('.chapters-list');
-    const items = Array.from(list.querySelectorAll('.chapter-item'));
-    
-    items.sort((a, b) => {
-        const aText = a.querySelector('.chapter-volume').textContent;
-        const bText = b.querySelector('.chapter-volume').textContent;
-        return isAscending ? aText.localeCompare(bText) : bText.localeCompare(aText);
-    });
-    
-    isAscending = !isAscending;
-    this.textContent = isAscending ? 'DESC' : 'ASC';
-    
-    items.forEach(item => list.appendChild(item));
 });
 </script>
 {% endblock %}

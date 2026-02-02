@@ -7,72 +7,52 @@
         <!-- Левая кнопка возврата -->
         <div class="back-menu">
             <button class="back-button" onclick="toggleBackMenu()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
             </button>
-            
-            <!-- Выпадающее меню -->
-            <div class="back-dropdown" id="backDropdown">
-                <a href="/manga/{{ manga.slug }}/" class="dropdown-item">
-                    <span>📖</span> Details
-                </a>
-                <a href="/" class="dropdown-item">
-                    <span>🏠</span> Main
-                </a>
-            </div>
         </div>
-        
+
         <!-- Навигация по главам -->
         <div class="chapter-nav">
             <button class="nav-arrow" onclick="previousChapter()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M15 18l-6-6 6-6"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6" />
                 </svg>
             </button>
-            
+
             <span class="chapter-info">Vol {{ chapter.volume }} Ch {{ chapter.number }}</span>
-            
+
             <button class="nav-arrow" onclick="nextChapter()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 18l6-6-6-6"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6" />
                 </svg>
             </button>
         </div>
-        
+
         <!-- Правые кнопки -->
         <div class="reader-actions">
             <button class="icon-btn" onclick="toggleBookmark()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                 </svg>
             </button>
-            
+
             <button class="icon-btn" onclick="toggleSettings()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <polygon
+                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                    </polygon>
                 </svg>
             </button>
         </div>
-        
-        <!-- Выпадающее меню настроек -->
-        <div class="settings-dropdown" id="settingsDropdown">
-            <div class="settings-title">Режим чтения</div>
-            <button class="settings-option" onclick="setReadingMode('horizontal')">
-                <span>↔️</span> Горизонтальный
-            </button>
-            <button class="settings-option" onclick="setReadingMode('vertical')">
-                <span>↕️</span> Вертикальный
-            </button>
-        </div>
     </header>
-    
-    <!-- Боковая панель -->
-    <aside class="reader-sidebar">
-        <button class="sidebar-tab active">Main</button>
-        <button class="sidebar-tab">Description</button>
-    </aside>
-    
+
     <!-- Область для страниц -->
     <main class="reader-main" id="readerMain">
         <!-- Страницы будут загружаться динамически -->
@@ -81,62 +61,93 @@
 </div>
 
 <script>
-let currentReadingMode = 'vertical'; // или 'horizontal'
+    let currentReadingMode = 'vertical'; // или 'horizontal'
 
-function toggleBackMenu() {
-    const dropdown = document.getElementById('backDropdown');
-    dropdown.classList.toggle('show');
-}
-
-function toggleSettings() {
-    const dropdown = document.getElementById('settingsDropdown');
-    dropdown.classList.toggle('show');
-}
-
-function setReadingMode(mode) {
-    currentReadingMode = mode;
-    const readerMain = document.getElementById('readerMain');
-    
-    if (mode === 'horizontal') {
-        readerMain.classList.add('horizontal-mode');
-        readerMain.classList.remove('vertical-mode');
-    } else {
-        readerMain.classList.add('vertical-mode');
-        readerMain.classList.remove('horizontal-mode');
+    function toggleBackMenu() {
+        const dropdown = document.getElementById('backDropdown');
+        dropdown.classList.toggle('show');
     }
-    
-    toggleSettings();
-}
 
-function toggleBookmark() {
-    alert('Закладка добавлена!');
-}
-
-function previousChapter() {
-    // TODO: Логика перехода к предыдущей главе
-    alert('Предыдущая глава');
-}
-
-function nextChapter() {
-    // TODO: Логика перехода к следующей главе
-    alert('Следующая глава');
-}
-
-// Закрыть выпадающие меню при клике вне
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.back-menu')) {
-        document.getElementById('backDropdown').classList.remove('show');
+    function toggleSettings() {
+        const dropdown = document.getElementById('settingsDropdown');
+        dropdown.classList.toggle('show');
     }
-    if (!e.target.closest('.reader-actions')) {
-        document.getElementById('settingsDropdown').classList.remove('show');
+
+    function setReadingMode(mode) {
+        currentReadingMode = mode;
+        const readerMain = document.getElementById('readerMain');
+
+        if (mode === 'horizontal') {
+            readerMain.classList.add('horizontal-mode');
+            readerMain.classList.remove('vertical-mode');
+        } else {
+            readerMain.classList.add('vertical-mode');
+            readerMain.classList.remove('horizontal-mode');
+        }
+
+        toggleSettings();
     }
-});
+
+    function toggleBookmark() {
+        alert('Закладка добавлена!');
+    }
+
+    function previousChapter() {
+        // TODO: Логика перехода к предыдущей главе
+        alert('Предыдущая глава');
+    }
+
+    function nextChapter() {
+        // TODO: Логика перехода к следующей главе
+        alert('Следующая глава');
+    }
+
+    // Закрыть выпадающие меню при клике вне
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.back-menu')) {
+            document.getElementById('backDropdown').classList.remove('show');
+        }
+        if (!e.target.closest('.reader-actions')) {
+            document.getElementById('settingsDropdown').classList.remove('show');
+        }
+    });
 
 // Загрузка страниц (пример)
-window.addEventListener('load', function() {
-    // TODO: Загрузить страницы главы через API
+    window.addEventListener('load', function () {
+        // TODO: Загрузить страницы главы через API
+        const readerMain = document.getElementById('readerMain');
+        readerMain.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 100px;">Страницы главы будут загружены здесь</p>';
+    });
+
+    window.addEventListener('load', function () {
     const readerMain = document.getElementById('readerMain');
-    readerMain.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 100px;">Страницы главы будут загружены здесь</p>';
+    
+    // Безопасно достаем данные, которые Django положил в скрипт выше
+    const pages = JSON.parse(document.getElementById('pages-data').textContent);
+
+    if (pages && pages.length > 0) {
+        readerMain.innerHTML = ''; 
+        
+        pages.forEach((src, index) => {
+            const img = document.createElement('img');
+            // Если в src только относительный путь, добавьте базовый домен CDN
+            img.src = src; 
+            img.alt = `Страница ${index + 1}`;
+            img.className = 'reader-page';
+            img.loading = 'lazy';
+            
+            img.onerror = function() {
+                this.style.display = 'none';
+                console.error("Ошибка загрузки страницы:", src);
+            };
+
+            readerMain.appendChild(img);
+        });
+    } else {
+        readerMain.innerHTML = '<div style="padding:100px; text-align:center; color: white;">' +
+                               '<h3>Упс! Страницы не найдены.</h3>' +
+                               '<p>Возможно, парсер не смог получить ссылки. Проверьте консоль сервера.</p></div>';
+    }
 });
 </script>
 {% endblock %}

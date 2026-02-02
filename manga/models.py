@@ -97,6 +97,7 @@ class Chapter(models.Model):
     manga = models.ForeignKey(Manga, on_delete=models.CASCADE, related_name='chapters')
     number = models.FloatField()  # 1, 1.5, 2 и т.д.
     title = models.CharField(max_length=300, blank=True)
+    volume = models.IntegerField(default=1)  # Добавьте эту строку
     
     # Ссылка на оригинал
     url = models.URLField()

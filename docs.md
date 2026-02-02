@@ -16,3 +16,9 @@ Users - Регистрация/авторизация Профили? Закла
 ### User
 
 ### Parser
+
+## Path
+127.0.0.1:8000 - main page
+127.0.0.1:8000/manga/star-fostered-swordmaster - about title? just show Title name and Description 
+127.0.0.1:8000/manga/star-fostered-swordmaster/chapters - list of chapters
+127.0.0.1:8000/manga/star-fostered-swordmaster/chapters/215670481645225498/pages/1 - place where users read manga
