@@ -42,7 +42,8 @@ class MangaLibParser(BaseParser):
 
     def _parse_search_results(self, data: dict) -> List[Dict]:
         results = []
-        if 'data' not in data: return results
+        if 'data' not in data: 
+            return results
         
         for item in data['data']:
             results.append({
@@ -110,7 +111,8 @@ class MangaLibParser(BaseParser):
 
     def _parse_chapters(self, data: dict, slug: str) -> List[Dict]:
         chapters = []
-        if 'data' not in data: return chapters
+        if 'data' not in data: 
+            return chapters
         for chapter in data['data']:
             chapters.append({
                 'number': chapter.get('number'),
@@ -126,17 +128,38 @@ class MangaLibParser(BaseParser):
 
     async def get_chapter_pages_async(self, slug: str, volume: int, number: str) -> List[str]:
         """Получает список URL всех страниц главы"""
-        url = f"{self.api_url}{slug}/chapter?number={number}&volume={volume}"
+        
+        # 1. Нормализация номера: убираем ".0", если это целое число
+        try:
+            n = float(number)
+            # Проверяем, является ли число целым (например, 1.0 или 0.0)
+            clean_number = str(int(n)) if n == int(n) else str(n)
+        except (ValueError, TypeError):
+            clean_number = str(number)
+
+        # 2. Формируем URL с чистым номером
+        url = f"{self.api_url}{slug}/chapter?number={clean_number}&volume={volume}"
+        #print(url)
         async with aiohttp.ClientSession() as session:
             try:
                 data = await self._fetch(session, url)
-                pages_data = data.get('data', {}).get('pages', [])
-                # Извлекаем прямые ссылки на изображения
-                return [p.get('url') for p in pages_data if p.get('url')]
+                # Получаем список словарей
+                raw_pages = data.get('data', {}).get('pages', []) if isinstance(data.get('data'), dict) else []
+                
+                # Собираем только чистые строки URL
+                clean_urls = []
+                for p in raw_pages:
+                    img_path = p.get('url')
+                    if img_path:
+                        clean_urls.append(f"https://img2.imglib.info{img_path}")
+
+                #print(clean_urls)
+                return clean_urls
+                
             except Exception as e:
                 print(f"Pages error: {e}")
                 return []
 
     def _get_content_type(self, type_label: str) -> str:
-        mapping = {'Манга': 'Manga', 'Манhwa': 'Manhwa', 'Маньхуа': 'Manhua', 'Комикс': 'Comic'}
+        mapping = {'Манга': 'Manga', 'Манхва': 'Manhwa', 'Маньхуа': 'Manhua', 'Комикс': 'Comic'}
         return mapping.get(type_label, 'Manga')

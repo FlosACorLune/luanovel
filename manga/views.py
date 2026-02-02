@@ -171,9 +171,10 @@ def _fetch_and_save_chapters(manga, slug):
                     manga=manga,
                     number=chapter_data['number'],
                     defaults={
-                        'title': chapter_data.get('title', ''),
-                        'url': chapter_data['url'],
-                        'pages_count': chapter_data.get('pages_count', 0),
+                        # Если title равен None, используем пустую строку
+                        'title': chapter_data.get('title') or '', 
+                        'url': chapter_data.get('url') or '',
+                        'volume': chapter_data.get('volume', 1),
                     }
                 )
                 if created:

@@ -1,153 +1,207 @@
-{% extends 'manga/base.html' %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ manga.title }} - Читалка</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --header-bg: rgba(18, 18, 18, 0.98);
+            --accent: #eb3352;
+            --text: #ffffff;
+            --text-muted: #888;
+            --border: #252525;
+        }
 
-{% block content %}
-<div class="reader-container">
-    <!-- Верхняя панель навигации -->
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        /* HEADER: Сетка на 3 части */
+        .reader-header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Левая часть: Домой и Название */
+        .h-left { display: flex; align-items: center; gap: 15px; }
+        .h-left a { color: var(--text); text-decoration: none; display: flex; align-items: center; transition: 0.2s; }
+        .h-left a:hover { color: var(--accent); }
+        .manga-title { 
+            font-weight: 700; 
+            font-size: 16px; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            max-width: 250px; 
+        }
+
+        /* Центр: Навигация между главами */
+        .h-center { display: flex; align-items: center; gap: 12px; }
+        .nav-btn { 
+            background: #1a1a1a; 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            padding: 6px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            display: flex; 
+            text-decoration: none;
+        }
+        .nav-btn:hover:not(.disabled) { border-color: var(--accent); color: var(--accent); }
+        .nav-btn.disabled { opacity: 0.2; cursor: default; }
+        .chapter-label { font-size: 14px; font-weight: 600; min-width: 110px; text-align: center; color: var(--text-muted); }
+
+        /* Правая часть: Юзер и Букмарк */
+        .h-right { display: flex; justify-content: flex-end; gap: 10px; }
+        .icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; transition: 0.2s; }
+        .icon-btn:hover { color: var(--accent); }
+
+        /* КОНТЕНТ */
+        .reader-content {
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .manga-page {
+            max-width: 900px;
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 2px; /* Компактный зазор между страницами */
+        }
+
+        /* ФУТЕР */
+        .reader-footer {
+            padding: 60px 20px 100px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            background: linear-gradient(to bottom, transparent, #000);
+        }
+        .footer-btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.3s;
+            border: 1px solid var(--border);
+            text-align: center;
+            min-width: 160px;
+        }
+        .btn-prev { background: #121212; color: var(--text); }
+        .btn-next { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 15px rgba(235, 51, 82, 0.3); }
+        .footer-btn:hover { transform: translateY(-3px); filter: brightness(1.2); }
+
+        @media (max-width: 768px) {
+            .manga-title { display: none; }
+            .h-center { gap: 5px; }
+            .chapter-label { font-size: 12px; min-width: 80px; }
+        }
+    </style>
+</head>
+<body>
+
+    {{ pages|json_script:"pages-json" }}
+
     <header class="reader-header">
-        <!-- Левая кнопка возврата -->
-        <div class="back-menu">
-            <button class="back-button" onclick="toggleBackMenu()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-            </button>
+        <div class="h-left">
+            <a href="{% url 'manga:home' %}" title="На главную">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </a>
+            {% if manga.slug %}
+                <a href="{% url 'manga:detail' manga.slug %}" class="manga-title">{{ manga.title }}</a>
+            {% else %}
+                <span class="manga-title">{{ manga.title }}</span>
+            {% endif %}
         </div>
 
-        <!-- Навигация по главам -->
-        <div class="chapter-nav">
-            <button class="nav-arrow" onclick="previousChapter()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path d="M15 18l-6-6 6-6" />
-                </svg>
-            </button>
+        <div class="h-center">
+            {% if prev_chapter %}
+                <a href="{% url 'manga:reader' prev_chapter.id %}" class="nav-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                </a>
+            {% else %}
+                <div class="nav-btn disabled"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+            {% endif %}
 
-            <span class="chapter-info">Vol {{ chapter.volume }} Ch {{ chapter.number }}</span>
+            <div class="chapter-label">Том {{ chapter.volume }} Гл {{ chapter.number }}</div>
 
-            <button class="nav-arrow" onclick="nextChapter()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path d="M9 18l6-6-6-6" />
-                </svg>
-            </button>
+            {% if next_chapter %}
+                <a href="{% url 'manga:reader' next_chapter.id %}" class="nav-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </a>
+            {% else %}
+                <div class="nav-btn disabled"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+            {% endif %}
         </div>
 
-        <!-- Правые кнопки -->
-        <div class="reader-actions">
-            <button class="icon-btn" onclick="toggleBookmark()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                </svg>
+        <div class="h-right">
+            <button class="icon-btn" onclick="alert('Закладка добавлена!')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
             </button>
-
-            <button class="icon-btn" onclick="toggleSettings()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <polygon
-                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                    </polygon>
-                </svg>
+            <button class="icon-btn">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </button>
         </div>
     </header>
 
-    <!-- Область для страниц -->
-    <main class="reader-main" id="readerMain">
-        <!-- Страницы будут загружаться динамически -->
-        <div class="loading">Загрузка страниц...</div>
+    <main class="reader-content" id="imageContainer">
+        <p style="margin-top: 100px; color: var(--text-muted);">Загрузка страниц...</p>
     </main>
-</div>
 
-<script>
-    let currentReadingMode = 'vertical'; // или 'horizontal'
+    <footer class="reader-footer">
+        {% if prev_chapter %}
+            <a href="{% url 'manga:reader' prev_chapter.id %}" class="footer-btn btn-prev">← Пред. глава</a>
+        {% else %}
+            {# Если предыдущей главы нет (или это первая), всегда ведем на дескрипшн #}
+            <a href="{% url 'manga:detail' chapter.manga.slug %}" class="footer-btn btn-prev">← К описанию</a>
+        {% endif %}
 
-    function toggleBackMenu() {
-        const dropdown = document.getElementById('backDropdown');
-        dropdown.classList.toggle('show');
-    }
+        {% if next_chapter %}
+            <a href="{% url 'manga:reader' next_chapter.id %}" class="footer-btn btn-next">След. глава →</a>
+        {% else %}
+            {# Если следующей главы нет, кнопка ведет на дескрипшн #}
+            <a href="{% url 'manga:detail' chapter.manga.slug %}" class="footer-btn btn-next">Завершить →</a>
+        {% endif %}
+    </footer>
 
-    function toggleSettings() {
-        const dropdown = document.getElementById('settingsDropdown');
-        dropdown.classList.toggle('show');
-    }
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('imageContainer');
+            const pages = JSON.parse(document.getElementById('pages-json').textContent);
 
-    function setReadingMode(mode) {
-        currentReadingMode = mode;
-        const readerMain = document.getElementById('readerMain');
-
-        if (mode === 'horizontal') {
-            readerMain.classList.add('horizontal-mode');
-            readerMain.classList.remove('vertical-mode');
-        } else {
-            readerMain.classList.add('vertical-mode');
-            readerMain.classList.remove('horizontal-mode');
-        }
-
-        toggleSettings();
-    }
-
-    function toggleBookmark() {
-        alert('Закладка добавлена!');
-    }
-
-    function previousChapter() {
-        // TODO: Логика перехода к предыдущей главе
-        alert('Предыдущая глава');
-    }
-
-    function nextChapter() {
-        // TODO: Логика перехода к следующей главе
-        alert('Следующая глава');
-    }
-
-    // Закрыть выпадающие меню при клике вне
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest('.back-menu')) {
-            document.getElementById('backDropdown').classList.remove('show');
-        }
-        if (!e.target.closest('.reader-actions')) {
-            document.getElementById('settingsDropdown').classList.remove('show');
-        }
-    });
-
-// Загрузка страниц (пример)
-    window.addEventListener('load', function () {
-        // TODO: Загрузить страницы главы через API
-        const readerMain = document.getElementById('readerMain');
-        readerMain.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 100px;">Страницы главы будут загружены здесь</p>';
-    });
-
-    window.addEventListener('load', function () {
-    const readerMain = document.getElementById('readerMain');
-    
-    // Безопасно достаем данные, которые Django положил в скрипт выше
-    const pages = JSON.parse(document.getElementById('pages-data').textContent);
-
-    if (pages && pages.length > 0) {
-        readerMain.innerHTML = ''; 
-        
-        pages.forEach((src, index) => {
-            const img = document.createElement('img');
-            // Если в src только относительный путь, добавьте базовый домен CDN
-            img.src = src; 
-            img.alt = `Страница ${index + 1}`;
-            img.className = 'reader-page';
-            img.loading = 'lazy';
-            
-            img.onerror = function() {
-                this.style.display = 'none';
-                console.error("Ошибка загрузки страницы:", src);
-            };
-
-            readerMain.appendChild(img);
+            if (pages && pages.length > 0) {
+                container.innerHTML = ''; // Очистка "Загрузки"
+                pages.forEach((url, index) => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.className = 'manga-page';
+                    img.loading = 'lazy'; // Ленивая загрузка для экономии трафика
+                    img.alt = `Страница ${index + 1}`;
+                    img.onerror = () => { img.style.display = 'none'; }; // Скрывать битые картинки
+                    container.appendChild(img);
+                });
+            } else {
+                container.innerHTML = '<div style="padding:100px; text-align:center;"><h3>Упс! Страницы не найдены.</h3><p>Попробуйте обновить страницу позже.</p></div>';
+            }
         });
-    } else {
-        readerMain.innerHTML = '<div style="padding:100px; text-align:center; color: white;">' +
-                               '<h3>Упс! Страницы не найдены.</h3>' +
-                               '<p>Возможно, парсер не смог получить ссылки. Проверьте консоль сервера.</p></div>';
-    }
-});
-</script>
-{% endblock %}
+    </script>
+</body>
+</html>
