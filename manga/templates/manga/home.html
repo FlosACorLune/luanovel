@@ -2,30 +2,16 @@
 
 {% block content %}
 <div class="home-container">
-    <h2 style="margin-bottom: 30px; font-size: 28px; color: var(--text-color);">Добро пожаловать в LuaNovel</h2>
-    
-    <p style="color: var(--text-secondary); margin-bottom: 40px;">
-        Используйте поиск выше чтобы найти мангу на различных сайтах
-    </p>
-
-    {% if mangas %}
-        <h3 style="margin-bottom: 20px; font-size: 20px;">Недавно просмотренные</h3>
-        <div class="manga-grid">
-            {% for manga in mangas %}
-            <a href="/manga/{{ manga.slug }}/" class="manga-card">
-                <img src="{{ manga.cover_url }}" alt="{{ manga.title }}" class="manga-card-cover">
-                <div class="manga-card-info">
-                    <h3 class="manga-card-title">{{ manga.title }}</h3>
-                    <div class="manga-card-meta">
-                        <span class="manga-badge">{{ manga.content_type.name }}</span>
-                        {% if manga.total_chapters > 0 %}
-                            <span>{{ manga.total_chapters }} глав</span>
-                        {% endif %}
-                    </div>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-    {% endif %}
+    <h3 style="margin-bottom: 25px;">Недавно просмотренные</h3>
+    <div class="manga-grid">
+        {% for manga in mangas %}
+        <a href="/manga/{{ manga.slug }}/" class="manga-card">
+            <div class="manga-cover-wrapper">
+                <img src="{{ manga.cover_url }}" alt="{{ manga.title }}" class="manga-cover">
+            </div>
+            <h3 class="manga-title">{{ manga.title }}</h3>
+        </a>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

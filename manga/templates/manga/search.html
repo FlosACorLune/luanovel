@@ -3,53 +3,29 @@
 {% block content %}
 <div class="search-results-container">
     {% if query %}
-        <h2 class="search-title">Результаты поиска: «{{ query }}»</h2>
-    {% else %}
-        <div class="search-prompt">
-            <h2>Поиск по всем сайтам</h2>
-            <p>Введите название манги в поле поиска выше</p>
-        </div>
-    {% endif %}
-
-    {% if search_results %}
+        <h2 style="margin-bottom: 30px;">Результаты: «{{ query }}»</h2>
         {% for source_data in search_results %}
         <section class="source-block">
-            <!-- Заголовок источника -->
             <div class="source-header">
                 <span class="source-name">{{ source_data.source_name }}</span>
-                <span class="results-count">{{ source_data.mangas|length }} результатов</span>
+                <span style="color: var(--text-muted)">{{ source_data.mangas|length }} тайтлов</span>
             </div>
 
-            {% if source_data.mangas %}
-                <!-- Горизонтальная лента с тайтлами -->
-                <div class="horizontal-scroll">
-                    {% for manga in source_data.mangas %}
-                    <a href="/manga/{{ manga.slug }}/" class="manga-card-horizontal">
-                        <div class="manga-cover-wrapper">
-                            <img src="{{ manga.cover_url }}" alt="{{ manga.title }}" class="manga-cover" loading="lazy">
-                        </div>
-                        <div class="manga-info">
-                            <h3 class="manga-title">{{ manga.title }}</h3>
-                        </div>
-                    </a>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="no-result-msg">Ничего не найдено на этом сайте</div>
-            {% endif %}
+            <div class="horizontal-scroll">
+                {% for manga in source_data.mangas %}
+                <a href="/manga/{{ manga.slug }}/" class="manga-card">
+                    <div class="manga-cover-wrapper">
+                        <img src="{{ manga.cover_url }}" alt="{{ manga.title }}" class="manga-cover" loading="lazy">
+                    </div>
+                    <h3 class="manga-title">{{ manga.title }}</h3>
+                </a>
+                {% endfor %}
+            </div>
         </section>
         {% endfor %}
-    {% elif query %}
-        <!-- Если поиск выполнен, но ничего не найдено вообще -->
-        <div class="no-results-global">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-                <line x1="11" y1="8" x2="11" y2="14"></line>
-                <line x1="11" y1="16" x2="11.01" y2="16"></line>
-            </svg>
-            <h3>Ничего не найдено</h3>
-            <p>Попробуйте изменить запрос или проверьте правильность написания</p>
+    {% else %}
+        <div style="text-align: center; padding: 100px;">
+            <h2>Введите название для поиска</h2>
         </div>
     {% endif %}
 </div>

@@ -1,29 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
-
-class ContentType(models.Model):
-    """
-    Типы контента: Manga, Manhwa, Manhua и т.д.
-    Легко добавлять новые типы
-    """
-    name = models.CharField(max_length=50, unique=True)  # Manga, Manhwa, Manhua
-    default_orientation = models.CharField(
-        max_length=20,
-        choices=[
-            ('horizontal', 'Horizontal'),
-            ('vertical', 'Vertical'),
-        ],
-        default='horizontal'
-    )
-    description = models.TextField(blank=True)
-    
-    def __str__(self):
-        return self.name
-    
-    class Meta:
-        verbose_name = "Content Type"
-        verbose_name_plural = "Content Types"
-
 
 class Genre(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -34,26 +9,11 @@ class Genre(models.Model):
 
 
 class Manga(models.Model):
-    STATUS_CHOICES = [
-        ('ongoing', 'Ongoing'),
-        ('completed', 'Completed'),
-        ('hiatus', 'Hiatus'),
-        ('cancelled', 'Cancelled'),
-    ]
-    
     # Основная информация
     title = models.CharField(max_length=300, db_index=True)
     slug = models.SlugField(unique=True, db_index=True)
-    alternative_titles = models.JSONField(default=list, blank=True)  # ["Title 1", "Title 2"]
+    alternative_titles = models.JSONField(default=list, blank=True)
     description = models.TextField(blank=True)
-    
-    # Тип контента (Manga/Manhwa/Manhua)
-    content_type = models.ForeignKey(
-        ContentType, 
-        on_delete=models.SET_NULL, 
-        null=True,
-        related_name='mangas'
-    )
     
     # Ссылки
     cover_url = models.URLField()
@@ -63,10 +23,9 @@ class Manga(models.Model):
     genres = models.ManyToManyField(Genre, blank=True, related_name='mangas')
     author = models.CharField(max_length=200, blank=True)
     artist = models.CharField(max_length=200, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ongoing')
     year = models.IntegerField(null=True, blank=True)
     
-    # Статистика (можно обновлять периодически)
+    # Статистика
     total_chapters = models.IntegerField(default=0)
     views_count = models.IntegerField(default=0)
     bookmarks_count = models.IntegerField(default=0)
@@ -80,29 +39,20 @@ class Manga(models.Model):
         indexes = [
             models.Index(fields=['slug']),
             models.Index(fields=['-updated_at']),
-            models.Index(fields=['content_type']),
         ]
     
     def __str__(self):
         return self.title
-    
-    def get_default_orientation(self):
-        """Получить ориентацию по умолчанию для этой манги"""
-        if self.content_type:
-            return self.content_type.default_orientation
-        return 'horizontal'
 
 
 class Chapter(models.Model):
     manga = models.ForeignKey(Manga, on_delete=models.CASCADE, related_name='chapters')
-    number = models.FloatField()  # 1, 1.5, 2 и т.д.
+    number = models.FloatField()
     title = models.CharField(max_length=255, null=True, blank=True)
     volume = models.IntegerField(default=1)
     
-    # Ссылка на оригинал
+    # Ссылка на контент
     url = models.URLField()
-    
-    # Количество страниц (можно парсить заранее или налету)
     pages_count = models.IntegerField(default=0)
     
     # Даты

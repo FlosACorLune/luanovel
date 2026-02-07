@@ -6,7 +6,6 @@ from .base import BaseParser
 class MangaLibParser(BaseParser):
     def __init__(self):
         self.api_url = "https://api.cdnlibs.org/api/manga/"
-        self.search_url = "https://api.cdnlibs.org/api/manga"
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             "Accept": "*/*",
@@ -28,9 +27,8 @@ class MangaLibParser(BaseParser):
         return asyncio.run(self._search_async(query, limit))
     
     async def _search_async(self, query: str, limit: int = 20) -> List[Dict]:
-        # ВАЖНО: Добавляем summary в fields, чтобы описание было в поиске
-        params_str = f"q={query}&site_id[]=1&limit={limit}&fields[]=rate_avg&fields[]=rate&fields[]=releaseDate"
-        url = f"{self.search_url}?{params_str}"
+        params = f"q={query}&site_id[]=1&limit={limit}&fields[]=rate_avg&fields[]=rate&fields[]=releaseDate"
+        url = f"{self.api_url}?{params}"
         
         async with aiohttp.ClientSession() as session:
             try:
@@ -50,7 +48,7 @@ class MangaLibParser(BaseParser):
                 'title': item.get('rus_name') or item.get('name'),
                 'slug': item.get('slug_url'),
                 'cover_url': item.get('cover', {}).get('default', ''),
-                'description': item.get('summary', ''), # Теперь здесь будет текст
+                'description': item.get('summary', ''),
                 'source': 'mangalib',
                 'content_type': self._get_content_type(item.get('type', {}).get('label')),
                 'year': item.get('releaseDate'),
@@ -64,7 +62,7 @@ class MangaLibParser(BaseParser):
         return asyncio.run(self._get_manga_details_async(slug))
     
     async def _get_manga_details_async(self, slug: str) -> Optional[Dict]:
-        params = "?fields[]=summary&fields[]=background&fields[]=moderated&fields[]=manga_status_id&fields[]=chap_count&fields[]=status_id"
+        params = "?fields[]=background&fields[]=eng_name&fields[]=otherNames&fields[]=summary&fields[]=releaseDate&fields[]=type_id&fields[]=caution&fields[]=views&fields[]=close_view&fields[]=rate_avg&fields[]=rate&fields[]=genres&fields[]=tags&fields[]=teams&fields[]=user&fields[]=franchise&fields[]=authors&fields[]=publisher&fields[]=userRating&fields[]=moderated&fields[]=metadata&fields[]=metadata.count&fields[]=metadata.close_comments&fields[]=manga_status_id&fields[]=chap_count&fields[]=status_id&fields[]=artists&fields[]=format"
         url = f"{self.api_url}{slug}{params}"
         
         async with aiohttp.ClientSession() as session:
@@ -129,24 +127,21 @@ class MangaLibParser(BaseParser):
     async def get_chapter_pages_async(self, slug: str, volume: int, number: str) -> List[str]:
         """Получает список URL всех страниц главы"""
         
-        # 1. Нормализация номера: убираем ".0", если это целое число
         try:
             n = float(number)
-            # Проверяем, является ли число целым (например, 1.0 или 0.0)
             clean_number = str(int(n)) if n == int(n) else str(n)
         except (ValueError, TypeError):
             clean_number = str(number)
 
-        # 2. Формируем URL с чистым номером
+
         url = f"{self.api_url}{slug}/chapter?number={clean_number}&volume={volume}"
         #print(url)
         async with aiohttp.ClientSession() as session:
             try:
                 data = await self._fetch(session, url)
-                # Получаем список словарей
+
                 raw_pages = data.get('data', {}).get('pages', []) if isinstance(data.get('data'), dict) else []
                 
-                # Собираем только чистые строки URL
                 clean_urls = []
                 for p in raw_pages:
                     img_path = p.get('url')

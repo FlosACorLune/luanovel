@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-%81pdq+(d*64^%!6q&jp^c@n_a)z&$3+c_8i^t8%k@r%4nykp1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     
     'manga',
     'users',
-    'parser'
+
 ]
 
 MIDDLEWARE = [
@@ -65,7 +65,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'manga.context_processors.manga_sources',
             ],
         },
     },

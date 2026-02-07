@@ -8,12 +8,12 @@
         <div class="manga-cover-large">
             <img src="{{ manga.cover_url }}" alt="{{ manga.title }}">
         </div>
-        
+
         <!-- Кнопки действий -->
         <button class="action-button primary" onclick="startReading()">
             Start Read
         </button>
-        
+
         <button class="action-button secondary" onclick="toggleBookmark()">
             Add to Bookmark
         </button>
@@ -23,24 +23,24 @@
     <div class="manga-content">
         <!-- Заголовок -->
         <h1 class="manga-detail-title">{{ manga.title }}</h1>
-        
+
         <!-- Описание -->
         <div class="manga-description">
             <p>{{ manga.description }}</p>
         </div>
-        
+
         <!-- Панель глав -->
         <div class="chapters-panel">
             <div class="chapters-header">
                 <span class="chapters-label">Chapters</span>
                 <input type="text" placeholder="Find num" class="chapter-search">
             </div>
-            
+
             <!-- Список глав -->
             <div class="chapters-list">
                 {% for chapter in chapters %}
                 <a href="/reader/{{ chapter.id }}/" class="chapter-item">
-                    <span class="chapter-volume">Volume {{ chapter.volume }} Chapter {{ chapter.number }}</span>
+                    <span class="chapter-volume">Volume {{ chapter.volume }} Chapter {{ chapter.number|floatformat:"-1" }}</span>
                     <span class="chapter-date">{{ chapter.created_at|date:"Y-m-d" }}</span>
                 </a>
                 {% empty %}
@@ -51,30 +51,38 @@
     </div>
 </div>
 
+
 <script>
-function startReading() {
-    if (chapters){
-        window.location.href = "/reader/{{ chapters.0.id }}/";
-    }
-    else{
-        alert('Нет доступных глав');
-    }
-}
+    function startReading() {
+        const firstChapter = document.querySelector('.chapter-item');
 
-function toggleBookmark() {
-    // TODO: Добавить логику добавления в закладки
-    alert('Функция закладок будет добавлена позже');
-}
+        if (firstChapter) {
+            window.location.href = firstChapter.getAttribute('href');
+        } else {
+            alert('Нет доступных глав');
+        }
+    }
 
-// Поиск глав
-document.querySelector('.chapter-search').addEventListener('input', function(e) {
-    const query = e.target.value.toLowerCase();
-    const items = document.querySelectorAll('.chapter-item');
-    
-    items.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        item.style.display = text.includes(query) ? 'flex' : 'none';
+    function toggleBookmark() {
+        // TODO: Добавить логику добавления в закладки
+        alert('Функция закладок будет добавлена позже');
+    }
+
+    // Поиск глав
+    document.querySelector('.chapter-search').addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase().trim();
+        const items = document.querySelectorAll('.chapter-item');
+
+        items.forEach(item => {
+            // Ищем текст только внутри информационных блоков, чтобы избежать лишнего шума
+            const content = item.textContent.toLowerCase();
+
+            if (content.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
     });
-});
 </script>
 {% endblock %}
