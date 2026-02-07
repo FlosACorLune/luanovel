@@ -11,5 +11,5 @@ urlpatterns = [
     path('manga/<slug:slug>/', views.manga_detail, name='detail'),
     
     # Читалка главы
-    path('reader/<int:chapter_id>/', views.chapter_reader, name='reader'),
+    path('manga/<slug:slug>/v<int:volume>/c<str:number>/', views.chapter_reader, name='reader'),
 ]

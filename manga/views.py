@@ -1,9 +1,11 @@
+#manga/views.py
 from django.shortcuts import render, get_object_or_404
 from django.http import Http404
 from manga.models import Manga, Chapter, Genre # Убрали ContentType
 from parser.parsers import get_parser
 from django.utils.text import slugify
 from django.db import transaction
+from users.models import ReadingProgress
 
 
 def home(request):
@@ -43,17 +45,43 @@ def manga_detail(request, slug):
     })
 
 
-def chapter_reader(request, chapter_id):
-    chapter = get_object_or_404(Chapter.objects.select_related('manga'), id=chapter_id)
+
+def chapter_reader(request, slug, volume, number):
+    # Превращаем строку '10.5' в число 10.5 для поиска в базе
+    try:
+        num_float = float(number)
+    except ValueError:
+        raise Http404("Неверный формат номера главы")
+
+    # Ищем главу, используя связь через manga__slug
+    chapter = get_object_or_404(
+        Chapter.objects.select_related('manga'), 
+        manga__slug=slug, 
+        volume=volume, 
+        number=num_float
+    )
     
+    manga = chapter.manga
+    
+    # Парсинг страниц
     parser = get_parser('mangalib')
-    pages = parser.get_pages(chapter.manga.slug, chapter.volume, chapter.number)
+    pages = parser.get_pages(manga.slug, chapter.volume, chapter.number)
     
-    prev_chapter = Chapter.objects.filter(manga=chapter.manga, number__lt=chapter.number).order_by('-number').first()
-    next_chapter = Chapter.objects.filter(manga=chapter.manga, number__gt=chapter.number).order_by('number').first()
+    # Сохранение прогресса
+    if request.user.is_authenticated:
+        ReadingProgress.objects.update_or_create(
+            user=request.user,
+            manga=manga,
+            defaults={'last_chapter': chapter}
+        )
+    
+    # Соседние главы
+    prev_chapter = Chapter.objects.filter(manga=manga, number__lt=chapter.number).order_by('-number').first()
+    next_chapter = Chapter.objects.filter(manga=manga, number__gt=chapter.number).order_by('number').first()
     
     return render(request, 'manga/reader.html', {
         'chapter': chapter,
+        'manga': chapter.manga,
         'pages': pages,
         'prev_chapter': prev_chapter,
         'next_chapter': next_chapter,

@@ -1,0 +1,14 @@
+{% extends 'manga/base.html' %}
+{% block content %}
+<div style="max-width: 400px; margin: 50px auto; background: var(--bg-sec); padding: 30px; border-radius: var(--radius);">
+    <h2 style="margin-bottom: 20px;">Вход</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="login-button" style="width: 100%; border: none; cursor: pointer; margin-top: 15px;">Войти</button>
+    </form>
+    <p style="margin-top: 20px; font-size: 0.9rem; color: var(--text-muted);">
+        Нет аккаунта? <a href="{% url 'users:register' %}" style="color: var(--accent);">Создать</a>
+    </p>
+</div>
+{% endblock %}

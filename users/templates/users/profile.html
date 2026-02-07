@@ -1,0 +1,58 @@
+{% extends 'manga/base.html' %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>
+            {% if is_own_profile %}
+                Моя библиотека
+            {% else %}
+                Библиотека @{{ profile_user.username }}
+            {% endif %}
+        </h1>
+    </div>
+
+    {% regroup bookmarks by get_status_display as status_list %}
+
+    {% for status in status_list %}
+    <h2 style="margin: 30px 0 15px; color: var(--accent);">{{ status.grouper }}</h2>
+    <div class="manga-grid">
+        {% for bookmark in status.list %}
+        <a href="{% url 'manga:detail' bookmark.manga.slug %}" class="manga-card">
+            <div class="manga-cover-wrapper">
+                <img src="{{ bookmark.manga.cover_url }}" alt="{{ bookmark.manga.title }}" class="manga-cover">
+            </div>
+            <h3 class="manga-title">{{ bookmark.manga.title }}</h3>
+        </a>
+        {% endfor %}
+    </div>
+    {% empty %}
+    <div style="text-align: center; padding: 50px;">
+        <h3>Тут пока пусто...</h3>
+        <a href="/" style="color: var(--accent);">Найти что-нибудь почитать</a>
+    </div>
+    {% endfor %}
+    <h2 style="margin: 40px 0 15px; border-left: 4px solid var(--accent); padding-left: 15px;">История чтения</h2>
+    <div class="history-list">
+        {% for history in user.history.all %}
+        <div
+            style="display: flex; justify-content: space-between; background: var(--bg-sec); padding: 15px; border-radius: 10px; margin-bottom: 10px;">
+            <div>
+                <a href="{% url 'manga:detail' history.manga.slug %}"
+                    style="color: white; font-weight: bold; text-decoration: none;">
+                    {{ history.manga.title }}
+                </a>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">
+                    Остановились на: {{ history.last_chapter.number }} главе
+                </p>
+            </div>
+            <a href="{% url 'manga:reader' slug=history.manga.slug volume=history.last_chapter.volume number=history.last_chapter.number|floatformat:'-1' %}" class="login-button">
+                Продолжить
+            </a>
+        </div>
+        {% empty %}
+        <p>Вы еще ничего не читали.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

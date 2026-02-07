@@ -9,24 +9,37 @@
 </head>
 <body>
     <header class="top-bar">
-        <a href="/" class="logo">
-            <img src="{% static 'manga/icons/moon-stars-svgrepo-com.svg' %}" alt="Logo" class="lua-icon">
-            <span class="logo-text">Luanovel</span>
+        <a href="/" class="logo" id="logo-link" draggable="false">
+            <img src="{% static 'manga/icons/moon-stars-svgrepo-com.svg' %}" class="lua-icon" alt="Lua" draggable="false">
+            <span class="logo-text" draggable="false">LUANOVEL</span>
         </a>
 
         <div class="search-container">
             <form action="/parser/search/" method="get">
-                <input type="text" name="q" placeholder="Поиск манги..." class="search-input" value="{{ query }}">
-                <button type="submit" class="search-button">🔍</button>
+                <input type="text" name="q" placeholder="Поиск манги..." class="search-input" value="{{ query|default:'' }}">
             </form>
         </div>
 
         <div class="top-bar-actions">
             {% if user.is_authenticated %}
-                <a href="#" class="icon-button">🔖</a>
-                <a href="#" class="icon-button">👤</a>
+                <a href="{% url 'users:profile' username=user.username %}" class="icon-button" title="Профиль" draggable="false">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M20 21v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1"/>
+                    </svg>
+                </a>
+
+                <form action="{% url 'users:logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-submit" title="Выйти">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <path d="M16 17l5-5-5-5M21 12H9"/>
+                        </svg>
+                    </button>
+                </form>
             {% else %}
-                <a href="#" class="login-button">Вход</a>
+                <a href="{% url 'users:login' %}" class="login-button">Вход | Регистрация</a>
             {% endif %}
         </div>
     </header>
@@ -36,5 +49,17 @@
     </main>
 
     <script src="{% static 'manga/js/main.js' %}"></script>
+    <script>
+        // Скрипт плавного скролла
+        const logo = document.getElementById('logo-link');
+        if (logo) {
+            logo.addEventListener('click', function(e) {
+                if (window.location.pathname === '/' && !window.location.search) {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        }
+    </script>
 </body>
 </html>

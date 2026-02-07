@@ -64,7 +64,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 250px;
+            max-width: 300px;
         }
 
         /* Центр: Навигация между главами */
@@ -162,12 +162,7 @@
             min-width: 160px;
         }
 
-        .btn-prev {
-            background: #121212;
-            color: var(--text);
-        }
-
-        .btn-next {
+        .btn {
             background: var(--accent);
             color: white;
             border-color: var(--accent);
@@ -217,7 +212,7 @@
 
         <div class="h-center">
             {% if prev_chapter %}
-            <a href="{% url 'manga:reader' prev_chapter.id %}" class="nav-btn">
+            <a href="{% url 'manga:reader' slug=manga.slug volume=prev_chapter.volume number=prev_chapter.number|floatformat:'-1' %}" class="nav-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M15 18l-6-6 6-6" />
                 </svg>
@@ -232,7 +227,7 @@
             <div class="chapter-label">Том {{ chapter.volume }} Гл {{ chapter.number }}</div>
 
             {% if next_chapter %}
-            <a href="{% url 'manga:reader' next_chapter.id %}" class="nav-btn">
+            <a href="{% url 'manga:reader' slug=manga.slug volume=next_chapter.volume number=next_chapter.number|floatformat:'-1' %}" class="nav-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18l6-6-6-6" />
                 </svg>
@@ -251,12 +246,6 @@
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                 </svg>
             </button>
-            <button class="icon-btn">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-            </button>
         </div>
     </header>
 
@@ -266,20 +255,19 @@
 
     <footer class="reader-footer">
         {% if prev_chapter %}
-        <a href="{% url 'manga:reader' prev_chapter.id %}" class="footer-btn btn-prev">← Пред. глава</a>
-        {% else %}
-        {# Если предыдущей главы нет (или это первая), всегда ведем на дескрипшн #}
-        <a href="{% url 'manga:detail' chapter.manga.slug %}" class="footer-btn btn-prev">← К описанию</a>
+        <a href="{% url 'manga:reader' slug=manga.slug volume=prev_chapter.volume number=prev_chapter.number|floatformat:'-1' %}" class="footer-btn btn">
+            ← Назад
+        </a>
         {% endif %}
 
         {% if next_chapter %}
-        <a href="{% url 'manga:reader' next_chapter.id %}" class="footer-btn btn-next">След. глава →</a>
+        <a href="{% url 'manga:reader' slug=manga.slug volume=next_chapter.volume number=next_chapter.number|floatformat:'-1' %}" class="footer-btn btn">
+            Вперед →
+        </a>
         {% else %}
-        {# Если следующей главы нет, кнопка ведет на дескрипшн #}
-        <a href="{% url 'manga:detail' chapter.manga.slug %}" class="footer-btn btn-next">Завершить →</a>
+        <a href="{% url 'manga:detail' manga.slug %}" class="footer-btn btn">Завершить</a>
         {% endif %}
     </footer>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('imageContainer');

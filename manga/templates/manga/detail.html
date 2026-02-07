@@ -2,49 +2,72 @@
 
 {% block content %}
 <div class="manga-detail-container">
-    <!-- Левая панель с обложкой и кнопками -->
     <aside class="manga-sidebar">
-        <!-- Обложка -->
         <div class="manga-cover-large">
             <img src="{{ manga.cover_url }}" alt="{{ manga.title }}">
         </div>
 
-        <!-- Кнопки действий -->
-        <button class="action-button primary" onclick="startReading()">
-            Start Read
-        </button>
+        <div class="manga-actions">
+            <button class="action-button primary" onclick="startReading()">
+                Начать читать
+            </button>
 
-        <button class="action-button secondary" onclick="toggleBookmark()">
-            Add to Bookmark
-        </button>
+            {% if user.is_authenticated %}
+                <div class="bookmark-selector-container" style="margin-top: 10px;">
+                    <select id="bookmark-status" class="action-button secondary" onchange="updateBookmark('{{ manga.id }}')">
+                        <option value="" {% if not current_status %}selected{% endif %} disabled>Добавить в список</option>
+                        <option value="reading" {% if current_status == 'reading' %}selected{% endif %}>Читаю</option>
+                        <option value="planned" {% if current_status == 'planned' %}selected{% endif %}>В планах</option>
+                        <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Завершено</option>
+                        <option value="dropped" {% if current_status == 'dropped' %}selected{% endif %}>Брошено</option>
+                        <option value="remove" style="color: #ff4d4d;">Удалить из закладок</option>
+                    </select>
+                </div>
+            {% else %}
+                <a href="{% url 'users:login' %}" class="action-button secondary login-link-btn" style="text-decoration: none; text-align: center; display: block;">
+                    Войдите, чтобы сохранить
+                </a>
+            {% endif %}
+        </div>
     </aside>
 
-    <!-- Правая панель с информацией -->
-    <div class="manga-content">
-        <!-- Заголовок -->
+    <div class="manga-info-content">
         <h1 class="manga-detail-title">{{ manga.title }}</h1>
+        
+        <div class="manga-genres">
+            {% for genre in manga.genres.all %}
+                <span class="genre-badge">{{ genre.name }}</span>
+            {% endfor %}
+        </div>
 
-        <!-- Описание -->
+        <div class="manga-meta">
+            <span class="meta-item">Автор: <b>{{ manga.author|default:"Неизвестен" }}</b></span>
+            <span class="meta-item">Главы: <b>{{ chapters|length }}</b></span>
+        </div>
+
         <div class="manga-description">
+            <h3>Описание</h3>
             <p>{{ manga.description }}</p>
         </div>
 
-        <!-- Панель глав -->
         <div class="chapters-panel">
             <div class="chapters-header">
-                <span class="chapters-label">Chapters</span>
-                <input type="text" placeholder="Find num" class="chapter-search">
+                <span class="chapters-label">Список глав</span>
+                <input type="text" placeholder="Введите номер главы..." class="chapter-search">
             </div>
 
-            <!-- Список глав -->
             <div class="chapters-list">
                 {% for chapter in chapters %}
-                <a href="/reader/{{ chapter.id }}/" class="chapter-item">
-                    <span class="chapter-volume">Volume {{ chapter.volume }} Chapter {{ chapter.number|floatformat:"-1" }}</span>
-                    <span class="chapter-date">{{ chapter.created_at|date:"Y-m-d" }}</span>
-                </a>
-                {% empty %}
-                <div class="no-chapters">Главы не найдены</div>
+                    <a href="{% url 'manga:reader' slug=manga.slug volume=chapter.volume number=chapter.number|floatformat:'-1' %}" 
+                       class="chapter-item {% if chapter.id in read_chapters_ids %}read{% endif %}">
+                        <span class="chapter-info">
+                            Том {{ chapter.volume }} Глава <b class="chapter-num">{{ chapter.number|floatformat:"-1" }}</b>
+                            {% if chapter.id in read_chapters_ids %} 
+                                <span class="read-check">✔</span> 
+                            {% endif %}
+                        </span>
+                        <span class="chapter-date">{{ chapter.created_at|date:"d.m.Y" }}</span>
+                    </a>
                 {% endfor %}
             </div>
         </div>
@@ -52,34 +75,60 @@
 </div>
 
 
+
 <script>
+    function updateBookmark(mangaId) {
+        const selectElement = document.getElementById('bookmark-status');
+        const status = selectElement.value;
+        const formData = new FormData();
+        formData.append('manga_id', mangaId);
+        formData.append('status', status);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'users:toggle_bookmark' %}", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                if (status === 'remove') {
+                    selectElement.value = "";
+                }
+            }
+        })
+        .catch(error => console.error('Ошибка:', error));
+    }
+
     function startReading() {
         const firstChapter = document.querySelector('.chapter-item');
-
         if (firstChapter) {
             window.location.href = firstChapter.getAttribute('href');
         } else {
-            alert('Нет доступных глав');
+            alert('Главы пока не загружены');
         }
     }
 
-    function toggleBookmark() {
-        // TODO: Добавить логику добавления в закладки
-        alert('Функция закладок будет добавлена позже');
-    }
-
-    // Поиск глав
     document.querySelector('.chapter-search').addEventListener('input', function (e) {
-        const query = e.target.value.toLowerCase().trim();
+        const query = e.target.value.trim();
         const items = document.querySelectorAll('.chapter-item');
 
-        items.forEach(item => {
-            // Ищем текст только внутри информационных блоков, чтобы избежать лишнего шума
-            const content = item.textContent.toLowerCase();
+        if (query === "") {
+            items.forEach(item => item.style.display = 'flex');
+            return;
+        }
 
-            if (content.includes(query)) {
+        items.forEach(item => {
+            const numElement = item.querySelector('.chapter-num');
+            if (!numElement) return;
+            
+            const chapterNumber = numElement.textContent.trim();
+            
+            if (chapterNumber === query) {
                 item.style.display = 'flex';
-            } else {
+            } 
+            else {
                 item.style.display = 'none';
             }
         });

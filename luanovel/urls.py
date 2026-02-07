@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('manga.urls')),
     path('parser/', include('parser.urls')),
+    path('users/', include('users.urls')),
 ]
