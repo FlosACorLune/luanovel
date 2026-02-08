@@ -64,7 +64,7 @@ def home(request):
 def search(request):
     """Поиск по всем сайтам"""
     query = request.GET.get('q', '').strip()
-    source = request.GET.get('source', 'all')  # Можно указать конкретный источник
+    source = request.GET.get('source', 'all')  # добавить конкретный источник? 
     
     if not query:
         return render(request, 'manga/search.html', {

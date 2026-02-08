@@ -86,7 +86,7 @@ class SenkuroParser(BaseParser):
             return {
                 'title': title,
                 'slug': slug,
-                'description': description, # <--- Исправлено
+                'description': description,
                 'cover_url': cover_url,
                 'original_url': f'https://senkuro.me/manga/{slug}',
                 'author': author,
