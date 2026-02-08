@@ -123,6 +123,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+# ПУТЬ, куда Django соберет файлы при деплое (ЭТОГО НЕ ХВАТАЛО)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Папки, где Django ищет статику в процессе разработки
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'), 
+]
+
+# Настройка WhiteNoise для сжатия и долгого кэширования (полезно для Render)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
