@@ -9,7 +9,7 @@ class MangaLibParser(BaseParser):
     def __init__(self):
         self.api_url = "https://api.cdnlibs.org/api/manga/"
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0",
             "Accept": "*/*",
             "Accept-Language": "en-US,en;q=0.9",
             "Content-Type": "application/json",
@@ -22,6 +22,7 @@ class MangaLibParser(BaseParser):
         """Асинхронный запрос"""
         async with session.get(url, headers=self.headers, timeout=10) as response:
             response.raise_for_status()
+            print("Response: ",response)
             return await response.json()
 
     # --- ПОИСК ---
