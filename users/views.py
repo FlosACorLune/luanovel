@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .forms import UserRegisterForm
 from manga.models import Manga
-from .models import Bookmark
+from .models import Bookmark, ReadingProgress, Chapter
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -15,10 +15,31 @@ def register(request):
             form.save()
             username = form.cleaned_data.get('username')
             messages.success(request, f'Аккаунт создан для {username}! Теперь вы можете войти.')
-            return redirect('login')
+            return redirect('users:login')
     else:
         form = UserRegisterForm()
     return render(request, 'users/register.html', {'form': form})
+
+@login_required
+def update_reading_progress(request):
+    if request.method == 'POST':
+        chapter_id = request.POST.get('chapter_id')
+        chapter = get_object_or_404(Chapter, id=chapter_id)
+        
+        # Обновляем или создаем запись о прогрессе
+        progress, created = ReadingProgress.objects.update_or_create(
+            user=request.user,
+            manga=chapter.manga,
+            defaults={'last_chapter': chapter}
+        )
+        
+
+        return JsonResponse({
+            'status': 'success',
+            'last_read_number': float(chapter.number), # Передаем число для JS
+            'message': 'Прогресс обновлен'
+        })
+    return JsonResponse({'status': 'error'}, status=400)
 
 @login_required
 def toggle_bookmark(request):
@@ -48,16 +69,14 @@ def profile(request, username):
 
     profile_user = get_object_or_404(User, username=username)
     
-    # Получаем его закладки
     bookmarks = profile_user.bookmarks.all().select_related('manga')
     
-    # Получаем историю (последние 10 записей)
     history = profile_user.history.all().select_related('manga', 'last_chapter')[:10]
 
     context = {
-        'profile_user': profile_user, # Это тот, чей профиль мы смотрим
+        'profile_user': profile_user,
         'bookmarks': bookmarks,
         'history': history,
-        'is_own_profile': request.user == profile_user # Проверка: мой ли это профиль
+        'is_own_profile': request.user == profile_user 
     }
     return render(request, 'users/profile.html', context)

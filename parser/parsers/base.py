@@ -1,3 +1,4 @@
+#base.py
 from abc import ABC, abstractmethod
 
 class BaseParser(ABC):
@@ -16,4 +17,8 @@ class BaseParser(ABC):
     @abstractmethod
     def get_chapters(self, slug: str) -> list:
         """Получить список глав"""
+        pass
+    @abstractmethod
+    def get_pages(self, **kwargs) -> list:
+        """Получить список страниц. Принимает аргументы через kwargs для гибкости."""
         pass

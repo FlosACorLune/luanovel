@@ -12,4 +12,6 @@ urlpatterns = [
     
     # Читалка главы
     path('manga/<slug:slug>/v<int:volume>/c<str:number>/', views.chapter_reader, name='reader'),
+    path('manga/<slug:slug>/v<int:volume>/c<str:number>/download/', 
+         views.download_chapter_zip, name='download_chapter'),
 ]

@@ -2,16 +2,40 @@
 
 {% block content %}
 <div class="home-container">
-    <h3 style="margin-bottom: 25px;">Недавно просмотренные</h3>
-    <div class="manga-grid">
-        {% for manga in mangas %}
-        <a href="/manga/{{ manga.slug }}/" class="manga-card">
-            <div class="manga-cover-wrapper">
-                <img src="{{ manga.cover_url }}" alt="{{ manga.title }}" class="manga-cover">
-            </div>
-            <h3 class="manga-title">{{ manga.title }}</h3>
-        </a>
-        {% endfor %}
-    </div>
+    
+    {# Секция: Недавно просмотренные пользователем #}
+    {% if user.is_authenticated and user_history %}
+    <section class="history-section" style="margin-bottom: 40px;">
+        <h3 style="margin-bottom: 25px;">Недавно просмотренные</h3>
+        <div class="manga-grid">
+            {% for item in user_history %}
+            <a href="/manga/{{ item.manga.slug }}/" class="manga-card">
+                <div class="manga-cover-wrapper">
+                    <img src="{{ item.manga.cover_url }}" alt="{{ item.manga.title }}" class="manga-cover">
+                </div>
+                <h3 class="manga-title">{{ item.manga.title }}</h3>
+                <p style="font-size: 0.8em; color: #888;">Глава {{ item.last_chapter.number }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 40px;">
+    {% endif %}
+
+    {# Секция: Общие обновления #}
+    <section class="updates-section">
+        <h3 style="margin-bottom: 25px;">Последние обновления</h3>
+        <div class="manga-grid">
+            {% for manga in updated_mangas %}
+            <a href="/manga/{{ manga.slug }}/" class="manga-card">
+                <div class="manga-cover-wrapper">
+                    <img src="{{ manga.cover_url }}" alt="{{ manga.title }}" class="manga-cover">
+                </div>
+                <h3 class="manga-title">{{ manga.title }}</h3>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    
 </div>
 {% endblock %}

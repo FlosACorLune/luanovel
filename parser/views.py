@@ -1,3 +1,5 @@
+#parser/views.py
+
 from django.shortcuts import render
 from django.http import JsonResponse
 from manga.models import Manga, Chapter, Genre # Убрали ContentType
@@ -47,7 +49,7 @@ def api_search(request):
     if len(query) < 2:
         return JsonResponse({'results': []})
     
-    parser = get_parser('mangalib')
+    parser = get_parser('senkuro')
     
     if parser:
         try:
@@ -88,7 +90,7 @@ def manga_details(request, slug):
 
 def _fetch_and_save_manga(slug):
     """Парсит мангу и сохраняет в БД"""
-    parser = get_parser('mangalib')
+    parser = get_parser('senkuro')
     
     if not parser:
         return None
@@ -128,7 +130,7 @@ def _fetch_and_save_manga(slug):
 
 def _fetch_and_save_chapters(manga, slug):
     """Парсит главы и сохраняет в БД"""
-    parser = get_parser('mangalib')
+    parser = get_parser('senkuro')
     
     if not parser:
         return

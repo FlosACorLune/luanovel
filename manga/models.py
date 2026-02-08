@@ -14,7 +14,18 @@ class Manga(models.Model):
     slug = models.SlugField(unique=True, db_index=True)
     alternative_titles = models.JSONField(default=list, blank=True)
     description = models.TextField(blank=True)
-    
+    SOURCE_CHOICES = [
+        ('senkuro', 'Senkuro'),
+        ('mangalib', 'MangaLib'),
+        ('mangahub', 'MangaHub'),
+        ('other', 'Other'),
+    ]
+    source = models.CharField(
+        max_length=20, 
+        choices=SOURCE_CHOICES, 
+        default='senkuro',
+        db_index=True
+    )
     # Ссылки
     cover_url = models.URLField()
     original_url = models.URLField()

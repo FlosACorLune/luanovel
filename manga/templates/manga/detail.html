@@ -1,6 +1,188 @@
 {% extends 'manga/base.html' %}
 
 {% block content %}
+<style>
+    /* 1. Общий контейнер списка глав */
+    .chapters-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 15px;
+    }
+
+    /* 2. Карточка главы (ряд) */
+    .card-chapter {
+        display: flex;
+        align-items: center;
+        background: #1a1a1a;
+        border-radius: 8px;
+        padding: 8px 12px;
+        transition: background 0.2s;
+    }
+
+    .card-chapter:hover {
+        background: #252525;
+    }
+
+    /* 3. Левая часть: Иконка статуса (Прочитано/Нет) */
+    .button-icon-wrapper {
+        margin-right: 12px;
+        display: flex;
+        align-items: center;
+    }
+
+    .chapter-status-btn {
+        background: none;
+        border: none;
+        color: #444; /* Тусклый цвет для непрочитанных */
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .chapter-status-btn:hover {
+        background: rgba(235, 51, 82, 0.1);
+        color: #eb3352;
+    }
+
+    .chapter-status-btn.is-read {
+        color: #eb3352; /* Яркий цвет для последней прочитанной */
+    }
+
+    .chapter-status-btn svg {
+        width: 22px;
+        height: 22px;
+        pointer-events: none;
+    }
+
+    /* 4. Центральная и правая часть: Ссылка-обертка */
+    .card-chapter__link {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-grow: 1;
+        text-decoration: none;
+        color: #fff;
+    }
+
+    .card-chapter__link h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 400;
+    }
+
+    .card-chapter__link h3 b {
+        color: #fff;
+        margin-left: 5px;
+    }
+
+    /* 5. Правый блок: Дата и Скачивание */
+    .chapter-actions-right {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .chapter-date {
+        color: #666;
+        font-size: 13px;
+    }
+
+    /* 6. Поле ввода номера главы и кнопка загрузки всего тайтла */
+    .input-group {
+        display: flex;
+        align-items: center;
+        background: #1a1a1a;
+        border-radius: 8px;
+        padding: 5px 12px;
+        border: 1px solid #333;
+        transition: border-color 0.2s;
+    }
+
+    .input-group:focus-within {
+        border-color: #eb3352;
+    }
+
+    .input-group input {
+        background: none;
+        border: none;
+        color: white;
+        outline: none;
+        padding: 8px 0;
+        width: 100%;
+        font-size: 14px;
+    }
+
+    /* Иконка "Скачать всё" рядом с инпутом */
+    .download-title-btn {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        padding: 5px;
+        margin-left: 8px;
+        transition: color 0.2s;
+    }
+
+    .download-title-btn:hover {
+        color: #eb3352;
+    }
+
+    /* 7. Поиск по списку глав (в панели) */
+    .chapter-search {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        outline: none;
+        font-size: 14px;
+    }
+
+    .chapter-search:focus {
+        border-color: #eb3352;
+    }
+    /* Иконка скачивания внутри карточки */
+    .download-chapter-btn {
+        display: flex;
+        align-items: center;
+        color: #555;
+        transition: color 0.2s;
+        padding: 4px;
+    }
+
+    .download-chapter-btn:hover {
+        color: #fff;
+    }
+
+    /**/
+    .action-button.primary {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 15px;
+        line-height: 1.2;
+    }
+
+    .action-button.primary .continue-label {
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .action-button.primary .chapter-info {
+        font-size: 11px;
+        opacity: 0.8;
+        margin-top: 2px;
+        font-weight: normal;
+    }
+</style>
 <div class="manga-detail-container">
     <aside class="manga-sidebar">
         <div class="manga-cover-large">
@@ -8,40 +190,43 @@
         </div>
 
         <div class="manga-actions">
-            <button class="action-button primary" onclick="startReading()">
-                Начать читать
+            <button class="action-button primary" id="main-reading-btn" onclick="startReading()">
+                {% if last_read_number %}
+                    <span class="continue-label">Продолжить чтение</span>
+                    <span class="chapter-info">{{ last_read_number|floatformat:"-1" }} глава</span>
+                {% else %}
+                    <span class="continue-label">Начать читать</span>
+                {% endif %}
             </button>
 
             {% if user.is_authenticated %}
-                <div class="bookmark-selector-container" style="margin-top: 10px;">
-                    <select id="bookmark-status" class="action-button secondary" onchange="updateBookmark('{{ manga.id }}')">
-                        <option value="" {% if not current_status %}selected{% endif %} disabled>Добавить в список...</option>
-                        
-                        <option value="reading" {% if current_status == 'reading' %}selected{% endif %}>Читаю</option>
-                        
-                        <option value="planned" {% if current_status == 'planned' %}selected{% endif %}>В планах</option>
-                        
-                        <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Завершено</option>
-                        
-                        <option value="dropped" {% if current_status == 'dropped' %}selected{% endif %}>Брошено</option>
-                        
-                        <option value="remove" style="color: #ff4d4d;">❌ Удалить из закладок</option>
-                    </select>
-                </div>
+            <div class="bookmark-selector-container" style="margin-top: 10px;">
+                <select id="bookmark-status" class="action-button secondary"
+                    onchange="updateBookmark('{{ manga.id }}')">
+                    <option value="" {% if not current_status %}selected{% endif %} disabled>Добавить в список...
+                    </option>
+                    <option value="reading" {% if current_status == 'reading' %}selected{% endif %}>Читаю</option>
+                    <option value="planned" {% if current_status == 'planned' %}selected{% endif %}>В планах</option>
+                    <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Завершено</option>
+                    <option value="dropped" {% if current_status == 'dropped' %}selected{% endif %}>Брошено</option>
+                    <option value="remove" style="color: #ff4d4d;">Удалить из закладок</option>
+                </select>
+            </div>
             {% else %}
-                <a href="{% url 'users:login' %}" class="action-button secondary login-link-btn" style="text-decoration: none; text-align: center; display: block;">
-                    Войдите, чтобы сохранить
-                </a>
+            <a href="{% url 'users:login' %}" class="action-button secondary login-link-btn"
+                style="text-decoration: none; text-align: center; display: block;">
+                Войдите, чтобы сохранить
+            </a>
             {% endif %}
         </div>
     </aside>
 
     <div class="manga-info-content">
         <h1 class="manga-detail-title">{{ manga.title }}</h1>
-        
+
         <div class="manga-genres">
             {% for genre in manga.genres.all %}
-                <span class="genre-badge">{{ genre.name }}</span>
+            <span class="genre-badge">{{ genre.name }}</span>
             {% endfor %}
         </div>
 
@@ -63,25 +248,125 @@
 
             <div class="chapters-list">
                 {% for chapter in chapters %}
-                    <a href="{% url 'manga:reader' slug=manga.slug volume=chapter.volume number=chapter.number|floatformat:'-1' %}" 
-                       class="chapter-item {% if chapter.id in read_chapters_ids %}read{% endif %}">
-                        <span class="chapter-info">
-                            Том {{ chapter.volume }} Глава <b class="chapter-num">{{ chapter.number|floatformat:"-1" }}</b>
-                            {% if chapter.id in read_chapters_ids %} 
-                                <span class="read-check">✔</span> 
-                            {% endif %}
-                        </span>
-                        <span class="chapter-date">{{ chapter.created_at|date:"d.m.Y" }}</span>
+                <article class="card-chapter" data-id="{{ chapter.id }}"
+                    data-number="{{ chapter.number|stringformat:'f' }}">
+                    <div class="button-icon-wrapper">
+                        <button class="chapter-status-btn {% if chapter.id == last_read_chapter_id %}is-read{% endif %}"
+                            type="button" onclick="toggleChapterRead(event, '{{ chapter.id }}')"
+                            title="Отметить как прочитанное">
+
+                            {% if chapter.id == last_read_chapter_id %}
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            {% elif last_read_chapter_id and chapter.number < last_read_number %} <svg width="22"
+                                height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                {% else %}
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                                    </path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                                {% endif %}
+                        </button>
+                    </div>
+
+                    <a href="{% url 'manga:reader' slug=manga.slug volume=chapter.volume number=chapter.number|floatformat:'-1' %}"
+                        class="card-chapter__link">
+                        <h3>Том {{ chapter.volume }} <b>Глава {{ chapter.number|floatformat:"-1" }}</b></h3>
+
+                        <div class="chapter-actions-right">
+                            <div class="chapter-date">
+                                {{ chapter.release_date|date:"Y-m-d"|default:chapter.created_at|date:"Y-m-d" }}
+                            </div>
+
+                            <object> <a
+                                    href="{% url 'manga:download_chapter' slug=manga.slug volume=chapter.volume number=chapter.number %}"
+                                    class="download-chapter-btn">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </a>
+                            </object>
+                        </div>
                     </a>
+                </article>
                 {% endfor %}
             </div>
         </div>
     </div>
 </div>
 
-
-
 <script>
+    const isAuthenticated = true;
+
+    function toggleChapterRead(event, chapterId) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!isAuthenticated) {
+            alert('Пожалуйста, войдите в аккаунт, чтобы отмечать прочитанные главы.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('chapter_id', chapterId);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch("{% url 'users:update_progress' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Ответ сервера:", data);
+                if (data.status === 'success') {
+                    updateChapterIconsUI(chapterId, data.last_read_number);
+                }
+            })
+            .catch(error => console.error('Ошибка fetch:', error));
+    }
+
+    function updateChapterIconsUI(newLastId, newLastNumber) {
+        const chapters = document.querySelectorAll('.card-chapter');
+        console.log("Обновляем иконки. Последний номер:", newLastNumber);
+
+        chapters.forEach(card => {
+            const btn = card.querySelector('.chapter-status-btn');
+            const chapterId = card.getAttribute('data-id');
+            const rawNumber = card.getAttribute('data-number') || "0";
+            const chapterNumber = parseFloat(rawNumber.replace(',', '.'));
+
+            let newIcon = '';
+            btn.classList.remove('is-read');
+
+            if (chapterId === String(newLastId)) {
+                btn.classList.add('is-read');
+                newIcon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
+                btn.title = "Последняя прочитанная";
+            } else if (newLastNumber && chapterNumber < newLastNumber) {
+                newIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+                btn.title = "Прочитано";
+            } else {
+                newIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+                btn.title = "Отметить как прочитанное";
+            }
+            btn.innerHTML = newIcon;
+        });
+    }
+
     function updateBookmark(mangaId) {
         const selectElement = document.getElementById('bookmark-status');
         const status = selectElement.value;
@@ -94,22 +379,19 @@
             method: "POST",
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                alert(data.message);
-                if (status === 'remove') {
-                    selectElement.value = "";
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message);
+                    if (status === 'remove') selectElement.value = "";
                 }
-            }
-        })
-        .catch(error => console.error('Ошибка:', error));
+            });
     }
 
     function startReading() {
-        const firstChapter = document.querySelector('.chapter-item');
-        if (firstChapter) {
-            window.location.href = firstChapter.getAttribute('href');
+        const firstChapterLink = document.querySelector('.card-chapter__link');
+        if (firstChapterLink) {
+            window.location.href = firstChapterLink.getAttribute('href');
         } else {
             alert('Главы пока не загружены');
         }
@@ -117,24 +399,16 @@
 
     document.querySelector('.chapter-search').addEventListener('input', function (e) {
         const query = e.target.value.trim();
-        const items = document.querySelectorAll('.chapter-item');
-
-        if (query === "") {
-            items.forEach(item => item.style.display = 'flex');
-            return;
-        }
+        const items = document.querySelectorAll('.card-chapter');
+        const regex = new RegExp(`\\b${query}\\b`);
 
         items.forEach(item => {
-            const numElement = item.querySelector('.chapter-num');
-            if (!numElement) return;
+            const chapterNumber = item.getAttribute('data-number').replace(',', '.');
             
-            const chapterNumber = numElement.textContent.trim();
-            
-            if (chapterNumber === query) {
+            if (query === "") {
                 item.style.display = 'flex';
-            } 
-            else {
-                item.style.display = 'none';
+            } else {
+                item.style.display = regex.test(chapterNumber) ? 'flex' : 'none';
             }
         });
     });

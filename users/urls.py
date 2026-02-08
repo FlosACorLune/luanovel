@@ -11,4 +11,5 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('bookmark/toggle/', views.toggle_bookmark, name='toggle_bookmark'),
     path('@<str:username>/', views.profile, name='profile'),
+    path('update-progress/', views.update_reading_progress, name='update_progress')
 ]
