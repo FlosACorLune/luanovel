@@ -5,7 +5,7 @@ from manga.models import Manga, Chapter, Genre # Убрали ContentType
 from parser.parsers import get_parser
 from django.utils.text import slugify
 from django.db import transaction
-from users.models import ReadingProgress
+from users.models import ReadingProgress, Bookmark
 
 
 def home(request):
@@ -24,8 +24,13 @@ def manga_detail(request, slug):
     """
     Страница деталей манги
     """
-    # Убрали select_related('content_type')
     manga = Manga.objects.filter(slug=slug).first()
+    
+    current_status = None
+    if request.user.is_authenticated:
+        bookmark = Bookmark.objects.filter(user=request.user, manga=manga).first()
+        if bookmark:
+            current_status = bookmark.status
     
     if not manga:
         manga = _fetch_and_save_manga(slug)
@@ -41,7 +46,8 @@ def manga_detail(request, slug):
     
     return render(request, 'manga/detail.html', {
         'manga': manga,
-        'chapters': chapters
+        'chapters': chapters,
+        'current_status': current_status,
     })
 
 

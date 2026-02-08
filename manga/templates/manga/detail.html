@@ -15,12 +15,17 @@
             {% if user.is_authenticated %}
                 <div class="bookmark-selector-container" style="margin-top: 10px;">
                     <select id="bookmark-status" class="action-button secondary" onchange="updateBookmark('{{ manga.id }}')">
-                        <option value="" {% if not current_status %}selected{% endif %} disabled>Добавить в список</option>
+                        <option value="" {% if not current_status %}selected{% endif %} disabled>Добавить в список...</option>
+                        
                         <option value="reading" {% if current_status == 'reading' %}selected{% endif %}>Читаю</option>
+                        
                         <option value="planned" {% if current_status == 'planned' %}selected{% endif %}>В планах</option>
+                        
                         <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Завершено</option>
+                        
                         <option value="dropped" {% if current_status == 'dropped' %}selected{% endif %}>Брошено</option>
-                        <option value="remove" style="color: #ff4d4d;">Удалить из закладок</option>
+                        
+                        <option value="remove" style="color: #ff4d4d;">❌ Удалить из закладок</option>
                     </select>
                 </div>
             {% else %}
