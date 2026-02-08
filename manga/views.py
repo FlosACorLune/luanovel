@@ -21,7 +21,7 @@ def get_manga_source(slug: str) -> str:
     """
     # Проверяем в БД
     manga = Manga.objects.filter(slug=slug).first()
-    if manga and hasattr(manga, 'source') and manga.source:
+    if manga and manga.source:
         logger.info(f"Источник найден в БД: {manga.source} для {slug}")
         return manga.source
     
@@ -166,11 +166,11 @@ def manga_detail(request, slug, source=None):
         logger.info(f"Манга найдена в БД: {manga.title}")
         
         # Если source не указан в URL, берём из БД
-        if not source and hasattr(manga, 'source') and manga.source:
+        if not source and manga.source:
             source = manga.source
             logger.info(f"Источник взят из БД: {source}")
         # Если source указан в URL, но отличается от БД - обновляем
-        elif source and hasattr(manga, 'source') and manga.source != source:
+        elif source and manga.source != source:
             logger.warning(f"Источник в URL ({source}) отличается от БД ({manga.source})")
             manga.source = source
             manga.save(update_fields=['source'])
@@ -193,13 +193,12 @@ def manga_detail(request, slug, source=None):
     
     # Убеждаемся что source определён
     if not source:
-        if hasattr(manga, 'source') and manga.source:
+        if manga.source:
             source = manga.source
         else:
             source = get_manga_source(slug)
-            if hasattr(manga, 'source'):
-                manga.source = source
-                manga.save(update_fields=['source'])
+            manga.source = source
+            manga.save(update_fields=['source'])
     
     logger.info(f"Итоговый источник: {source}")
 
@@ -263,13 +262,12 @@ def chapter_reader(request, slug, volume, number, source=None):
     
     # Определяем источник
     if not source:
-        if hasattr(manga, 'source') and manga.source:
+        if manga.source:
             source = manga.source
         else:
             source = get_manga_source(slug)
-            if hasattr(manga, 'source'):
-                manga.source = source
-                manga.save(update_fields=['source'])
+            manga.source = source
+            manga.save(update_fields=['source'])
     
     logger.info(f"[chapter_reader] Читаем главу из источника: {source}")
     
@@ -436,12 +434,10 @@ def _fetch_and_save_manga(slug: str, source: str = 'senkuro'):
                 'artist': details.get('artist', ''),
                 'year': details.get('year'),
                 'total_chapters': details.get('total_chapters', 0),
+                'source': source,  # Добавляем источник
             }
             
-            # Добавляем source если модель поддерживает
-            if hasattr(Manga, 'source'):
-                manga_data['source'] = source
-                logger.info(f"Сохраняем источник в БД: {source}")
+            logger.info(f"Сохраняем источник в БД: {source}")
             
             manga = Manga.objects.create(**manga_data)
             

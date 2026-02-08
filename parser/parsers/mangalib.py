@@ -1,9 +1,9 @@
-#mangalib.py
+# mangalib.py - Синхронная версия для стабильности на Render.com
 
-import aiohttp
-import asyncio
+import requests
 from typing import List, Dict, Optional
 from .base import BaseParser
+
 
 class MangaLibParser(BaseParser):
     def __init__(self):
@@ -17,31 +17,33 @@ class MangaLibParser(BaseParser):
             "Referer": "https://mangalib.org/",
             "Site-Id": "1",
         }
+        self.timeout = 15  # Увеличенный таймаут для стабильности
     
-    async def _fetch(self, session: aiohttp.ClientSession, url: str) -> dict:
-        """Асинхронный запрос"""
-        async with session.get(url, headers=self.headers, timeout=10) as response:
+    def _fetch(self, url: str) -> dict:
+        """Синхронный запрос к API"""
+        try:
+            response = requests.get(url, headers=self.headers, timeout=self.timeout)
             response.raise_for_status()
-            print("Response: ",response)
-            return await response.json()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"MangaLib API error: {e}")
+            raise
 
     # --- ПОИСК ---
     def search(self, query: str, limit: int = 20) -> List[Dict]:
-        return asyncio.run(self._search_async(query, limit))
-    
-    async def _search_async(self, query: str, limit: int = 20) -> List[Dict]:
+        """Поиск манги по запросу"""
         params = f"q={query}&site_id[]=1&limit={limit}&fields[]=rate_avg&fields[]=rate&fields[]=releaseDate"
         url = f"{self.api_url}?{params}"
         
-        async with aiohttp.ClientSession() as session:
-            try:
-                data = await self._fetch(session, url)
-                return self._parse_search_results(data)
-            except Exception as e:
-                print(f"Search error: {e}")
-                return []
+        try:
+            data = self._fetch(url)
+            return self._parse_search_results(data)
+        except Exception as e:
+            print(f"MangaLib search error: {e}")
+            return []
 
     def _parse_search_results(self, data: dict) -> List[Dict]:
+        """Парсинг результатов поиска"""
         results = []
         if 'data' not in data: 
             return results
@@ -62,21 +64,19 @@ class MangaLibParser(BaseParser):
 
     # --- ДЕТАЛИ ---
     def get_manga_details(self, slug: str) -> Optional[Dict]:
-        return asyncio.run(self._get_manga_details_async(slug))
-    
-    async def _get_manga_details_async(self, slug: str) -> Optional[Dict]:
+        """Получить детальную информацию о манге"""
         params = "?fields[]=background&fields[]=eng_name&fields[]=otherNames&fields[]=summary&fields[]=releaseDate&fields[]=type_id&fields[]=caution&fields[]=views&fields[]=close_view&fields[]=rate_avg&fields[]=rate&fields[]=genres&fields[]=tags&fields[]=teams&fields[]=user&fields[]=franchise&fields[]=authors&fields[]=publisher&fields[]=userRating&fields[]=moderated&fields[]=metadata&fields[]=metadata.count&fields[]=metadata.close_comments&fields[]=manga_status_id&fields[]=chap_count&fields[]=status_id&fields[]=artists&fields[]=format"
         url = f"{self.api_url}{slug}{params}"
         
-        async with aiohttp.ClientSession() as session:
-            try:
-                data = await self._fetch(session, url)
-                return self._parse_manga_details(data)
-            except Exception as e:
-                print(f"Details error: {e}")
-                return None
+        try:
+            data = self._fetch(url)
+            return self._parse_manga_details(data)
+        except Exception as e:
+            print(f"MangaLib details error for {slug}: {e}")
+            return None
 
     def _parse_manga_details(self, data: dict) -> Dict:
+        """Парсинг деталей манги"""
         manga_data = data.get('data', {})
         return {
             'title': manga_data.get('rus_name') or manga_data.get('name'),
@@ -96,24 +96,24 @@ class MangaLibParser(BaseParser):
             'original_url': f"https://mangalib.org/{manga_data.get('slug_url')}"
         }
 
-    # --- ГЛАВЫ И СТРАНИЦЫ ---
+    # --- ГЛАВЫ ---
     def get_chapters(self, slug: str) -> List[Dict]:
-        return asyncio.run(self._get_chapters_async(slug))
-    
-    async def _get_chapters_async(self, slug: str) -> List[Dict]:
+        """Получить список глав манги"""
         url = f"{self.api_url}{slug}/chapters"
-        async with aiohttp.ClientSession() as session:
-            try:
-                data = await self._fetch(session, url)
-                return self._parse_chapters(data, slug)
-            except Exception as e:
-                print(f"Chapters error: {e}")
-                return []
+        
+        try:
+            data = self._fetch(url)
+            return self._parse_chapters(data, slug)
+        except Exception as e:
+            print(f"MangaLib chapters error for {slug}: {e}")
+            return []
 
     def _parse_chapters(self, data: dict, slug: str) -> List[Dict]:
+        """Парсинг списка глав"""
         chapters = []
         if 'data' not in data: 
             return chapters
+        
         for chapter in data['data']:
             chapters.append({
                 'number': chapter.get('number'),
@@ -123,50 +123,61 @@ class MangaLibParser(BaseParser):
             })
         return chapters
 
+    # --- СТРАНИЦЫ ---
     def get_pages(self, **kwargs) -> List[str]:
-            """Исправленный метод для получения страниц"""
-            slug = kwargs.get('manga_slug')
-            volume = kwargs.get('volume')
-            number = kwargs.get('number')
-            
-            # Используем существующий асинхронный метод
-            try:
-                return asyncio.run(self.get_chapter_pages_async(slug, volume, number))
-            except Exception as e:
-                print(f"Asyncio error on Render: {e}")
-                return []
-
-    async def get_chapter_pages_async(self, slug: str, volume: int, number: str) -> List[str]:
-        """Получает список URL всех страниц главы"""
+        """
+        Получить список URL всех страниц главы
+        
+        Args:
+            manga_slug (str): Slug манги
+            volume (int): Номер тома
+            number (str/float): Номер главы
+        
+        Returns:
+            List[str]: Список URL изображений страниц
+        """
+        slug = kwargs.get('manga_slug')
+        volume = kwargs.get('volume')
+        number = kwargs.get('number')
+        
+        if not all([slug, volume is not None, number is not None]):
+            print(f"MangaLib get_pages: недостаточно параметров - slug={slug}, volume={volume}, number={number}")
+            return []
         
         try:
-            n = float(number)
-            clean_number = str(int(n)) if n == int(n) else str(n)
-        except (ValueError, TypeError):
-            clean_number = str(number)
-
-
-        url = f"{self.api_url}{slug}/chapter?number={clean_number}&volume={volume}"
-        #print(url)
-        async with aiohttp.ClientSession() as session:
+            # Нормализация номера главы
             try:
-                data = await self._fetch(session, url)
-
-                raw_pages = data.get('data', {}).get('pages', []) if isinstance(data.get('data'), dict) else []
-                
-                clean_urls = []
-                for p in raw_pages:
-                    img_path = p.get('url')
-                    if img_path:
-                        clean_urls.append(f"https://img2.imglib.info{img_path}")
-
-                #print(clean_urls)
-                return clean_urls
-                
-            except Exception as e:
-                print(f"Pages error: {e}")
-                return []
+                n = float(number)
+                clean_number = str(int(n)) if n == int(n) else str(n)
+            except (ValueError, TypeError):
+                clean_number = str(number)
+            
+            url = f"{self.api_url}{slug}/chapter?number={clean_number}&volume={volume}"
+            
+            data = self._fetch(url)
+            
+            # Извлечение страниц
+            raw_pages = data.get('data', {}).get('pages', []) if isinstance(data.get('data'), dict) else []
+            
+            clean_urls = []
+            for p in raw_pages:
+                img_path = p.get('url')
+                if img_path:
+                    clean_urls.append(f"https://img2.imglib.info{img_path}")
+            
+            print(f"MangaLib: загружено {len(clean_urls)} страниц для {slug} v{volume} c{clean_number}")
+            return clean_urls
+            
+        except Exception as e:
+            print(f"MangaLib pages error: {e}")
+            return []
 
     def _get_content_type(self, type_label: str) -> str:
-        mapping = {'Манга': 'Manga', 'Манхва': 'Manhwa', 'Маньхуа': 'Manhua', 'Комикс': 'Comic'}
+        """Преобразование типа контента"""
+        mapping = {
+            'Манга': 'Manga',
+            'Манхва': 'Manhwa',
+            'Маньхуа': 'Manhua',
+            'Комикс': 'Comic'
+        }
         return mapping.get(type_label, 'Manga')
