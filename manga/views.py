@@ -265,7 +265,7 @@ def chapter_reader(request, slug, volume, number, source=None):
         manga=manga, 
         number__gt=chapter.number
     ).order_by('number').first()
-    
+    print(f"PAGES FOUND: {len(pages)}")
     return render(request, 'manga/reader.html', {
         'chapter': chapter,
         'manga': manga,

@@ -122,13 +122,18 @@ class MangaLibParser(BaseParser):
             })
         return chapters
 
-    def get_pages(self, slug: str, volume: int, number: str) -> List[str]:
-        """Синхронный метод для использования в Django views"""
-        def get_pages(self, **kwargs) -> List[str]:
+    def get_pages(self, **kwargs) -> List[str]:
+            """Исправленный метод для получения страниц"""
             slug = kwargs.get('manga_slug')
             volume = kwargs.get('volume')
             number = kwargs.get('number')
-            return asyncio.run(self.get_chapter_pages_async(slug, volume, number))
+            
+            # Используем существующий асинхронный метод
+            try:
+                return asyncio.run(self.get_chapter_pages_async(slug, volume, number))
+            except Exception as e:
+                print(f"Asyncio error on Render: {e}")
+                return []
 
     async def get_chapter_pages_async(self, slug: str, volume: int, number: str) -> List[str]:
         """Получает список URL всех страниц главы"""
