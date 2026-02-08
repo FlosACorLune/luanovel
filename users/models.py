@@ -8,7 +8,6 @@ class Profile(models.Model):
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     
-    # Упрощенные настройки: только самое важное
     is_vertical = models.BooleanField(default=True, verbose_name="Vertical Reading")
     
     def __str__(self):

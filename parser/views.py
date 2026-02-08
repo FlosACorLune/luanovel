@@ -2,7 +2,7 @@
 
 from django.shortcuts import render
 from django.http import JsonResponse
-from manga.models import Manga, Chapter, Genre # Убрали ContentType
+from manga.models import Manga, Chapter, Genre
 from parser.parsers import get_parser, PARSERS
 from django.utils.text import slugify
 from django.db import transaction

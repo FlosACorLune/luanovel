@@ -30,19 +30,18 @@ def get_source_from_url(url: str) -> str:
 
 def get_manga_source(slug: str) -> str:
     """Определяет источник манги"""
-    # Проверяем БД
+
     manga = Manga.objects.filter(slug=slug).first()
     if manga:
         if manga.source:
             return manga.source
-        # Если source пустой, но есть original_url
+        
         if manga.original_url:
             detected = get_source_from_url(manga.original_url)
             manga.source = detected
             manga.save(update_fields=['source'])
             return detected
     
-    # Пробуем парсеры по приоритету
     for source_key in ['senkuro', 'mangalib']:
         parser = get_parser(source_key)
         if parser:
@@ -151,7 +150,7 @@ def manga_detail(request, slug, source=None):
     last_read_chapter_id = None
 
     if manga:
-        # Если source не указан, берём из БД или определяем по URL
+
         if not source:
             if manga.source:
                 source = manga.source
@@ -163,12 +162,12 @@ def manga_detail(request, slug, source=None):
                 source = get_manga_source(slug)
                 manga.source = source
                 manga.save(update_fields=['source'])
-        # Если source указан, но отличается от БД - обновляем
+
         elif manga.source != source:
             manga.source = source
             manga.save(update_fields=['source'])
     else:
-        # Манга не в БД - загружаем
+
         if not source:
             source = get_manga_source(slug)
         
@@ -177,11 +176,11 @@ def manga_detail(request, slug, source=None):
     if not manga:
         raise Http404("Манга не найдена")
     
-    # Убеждаемся что source определён
+
     if not source:
         source = manga.source if manga.source else 'senkuro'
 
-    # Работа с пользователем
+
     if request.user.is_authenticated:
         bookmark = Bookmark.objects.filter(user=request.user, manga=manga).first()
         if bookmark:
@@ -232,7 +231,7 @@ def chapter_reader(request, slug, volume, number, source=None):
     
     manga = chapter.manga
     
-    # Определяем source
+
     if not source:
         if manga.source:
             source = manga.source
@@ -249,7 +248,7 @@ def chapter_reader(request, slug, volume, number, source=None):
     if not parser:
         raise Http404(f"Парсер '{source}' не найден")
     
-    # Подготовка kwargs в зависимости от источника
+
     if source == 'senkuro':
         parser_kwargs = {'chapter_slug': chapter.url}
     elif source == 'mangalib':
@@ -272,7 +271,7 @@ def chapter_reader(request, slug, volume, number, source=None):
         logger.error(f"Error loading pages: {e}")
         pages = []
     
-    # Сохранение прогресса
+
     if request.user.is_authenticated:
         ReadingProgress.objects.update_or_create(
             user=request.user,
@@ -280,7 +279,7 @@ def chapter_reader(request, slug, volume, number, source=None):
             defaults={'last_chapter': chapter}
         )
     
-    # Соседние главы
+
     prev_chapter = Chapter.objects.filter(
         manga=manga, 
         number__lt=chapter.number

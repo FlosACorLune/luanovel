@@ -26,7 +26,7 @@ def update_reading_progress(request):
         chapter_id = request.POST.get('chapter_id')
         chapter = get_object_or_404(Chapter, id=chapter_id)
         
-        # Обновляем или создаем запись о прогрессе
+
         progress, created = ReadingProgress.objects.update_or_create(
             user=request.user,
             manga=chapter.manga,
@@ -36,7 +36,7 @@ def update_reading_progress(request):
 
         return JsonResponse({
             'status': 'success',
-            'last_read_number': float(chapter.number), # Передаем число для JS
+            'last_read_number': float(chapter.number), 
             'message': 'Прогресс обновлен'
         })
     return JsonResponse({'status': 'error'}, status=400)

@@ -9,7 +9,7 @@ class Genre(models.Model):
 
 
 class Manga(models.Model):
-    # Основная информация
+
     title = models.CharField(max_length=300, db_index=True)
     slug = models.SlugField(unique=True, db_index=True)
     alternative_titles = models.JSONField(default=list, blank=True)
@@ -26,22 +26,22 @@ class Manga(models.Model):
         default='senkuro',
         db_index=True
     )
-    # Ссылки
+
     cover_url = models.URLField()
     original_url = models.URLField()
     
-    # Метаданные
+
     genres = models.ManyToManyField(Genre, blank=True, related_name='mangas')
     author = models.CharField(max_length=200, blank=True)
     artist = models.CharField(max_length=200, blank=True)
     year = models.IntegerField(null=True, blank=True)
     
-    # Статистика
+
     total_chapters = models.IntegerField(default=0)
     views_count = models.IntegerField(default=0)
     bookmarks_count = models.IntegerField(default=0)
     
-    # Даты
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -62,11 +62,11 @@ class Chapter(models.Model):
     title = models.CharField(max_length=255, null=True, blank=True)
     volume = models.IntegerField(default=1)
     
-    # Ссылка на контент
+
     url = models.URLField()
     pages_count = models.IntegerField(default=0)
     
-    # Даты
+
     release_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
