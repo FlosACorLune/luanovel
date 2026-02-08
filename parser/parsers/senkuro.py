@@ -7,7 +7,7 @@ from .base import BaseParser
 
 class SenkuroParser(BaseParser):
     def __init__(self):
-        self.api_url = 'https://api.senkuro.com/graphql'
+        self.api_url = 'https://api.senkuro.me/graphql'
         self.headers = {
             "Content-Type": "application/json",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
@@ -27,11 +27,17 @@ class SenkuroParser(BaseParser):
         Raises:
             requests.exceptions.RequestException: При ошибке запроса
         """
+        proxy_url = "http://89.208.85.78:443"
+        proxies = {
+            "http": proxy_url,
+            "https": proxy_url,
+        }
         try:
             response = requests.post(
                 self.api_url, 
                 json=payload, 
                 headers=self.headers, 
+                proxies=proxies,
                 timeout=self.timeout
             )
             response.raise_for_status()
@@ -132,7 +138,7 @@ class SenkuroParser(BaseParser):
                 'slug': slug,
                 'description': description,
                 'cover_url': cover_url,
-                'original_url': f'https://senkuro.com/manga/{slug}',
+                'original_url': f'https://senkuro.me/manga/{slug}',
                 'author': author,
                 'artist': artist,
                 'year': manga.get('releaseYear'),
